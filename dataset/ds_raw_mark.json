@@ -1,0 +1,69 @@
+{
+	"name": "ds_raw_mark",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_raw_data",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": "marks",
+				"container": "rawdata"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "STT",
+				"type": "String"
+			},
+			{
+				"name": "Mã học phần",
+				"type": "String"
+			},
+			{
+				"name": "Tên học phần",
+				"type": "String"
+			},
+			{
+				"name": "Tín chỉ",
+				"type": "String"
+			},
+			{
+				"name": "Loại môn học",
+				"type": "String"
+			},
+			{
+				"name": "Điểm",
+				"type": "String"
+			},
+			{
+				"name": "Điểm chữ",
+				"type": "String"
+			},
+			{
+				"name": "Kết quả",
+				"type": "String"
+			},
+			{
+				"name": "Chi tiết",
+				"type": "String"
+			}
+		]
+	}
+}

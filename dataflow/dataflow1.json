@@ -1,0 +1,64 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_raw_mark",
+						"type": "DatasetReference"
+					},
+					"name": "RawMarktoStaging"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_mark_staging",
+						"type": "DatasetReference"
+					},
+					"name": "sink1",
+					"rejectedDataLinkedService": {
+						"referenceName": "ls_datalake",
+						"type": "LinkedServiceReference"
+					}
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     MSSV as string",
+				"}",
+				"source(output(",
+				"          STT as string,",
+				"          {Mã học phần} as string,",
+				"          {Tên học phần} as string,",
+				"          {Tín chỉ} as string,",
+				"          {Loại môn học} as string,",
+				"          {Điểm} as string,",
+				"          {Điểm chữ} as string,",
+				"          {Kết quả} as string,",
+				"          {Chi tiết} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> RawMarktoStaging",
+				"RawMarktoStaging derive(MSSV = $MSSV) ~> derivedColumn1",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:[($MSSV)],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}
