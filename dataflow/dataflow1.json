@@ -48,7 +48,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> RawMarktoStaging",
-				"RawMarktoStaging derive(MSSV = $MSSV) ~> derivedColumn1",
+				"RawMarktoStaging derive(MSSV = split($MSSV,'.')[1]) ~> derivedColumn1",
 				"derivedColumn1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     partitionFileNames:[($MSSV)],",
