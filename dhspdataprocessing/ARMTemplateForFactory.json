@@ -1,0 +1,1116 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "dhspdataprocessing"
+		},
+		"ls_datalake_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_datalake'"
+		},
+		"ls_raw_data_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_raw_data'"
+		},
+		"ls_datalake_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://dhspdatalake.dfs.core.windows.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Ingest_All_Files_in_Faculty')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Folder in A Faculty",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_all_folder_in_faculty",
+								"type": "DatasetReference",
+								"parameters": {
+									"facultyName": {
+										"value": "@pipeline().parameters.facultyName",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Folder in A Faculty",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Folder in A Faculty').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Load all data in each Faculty",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Ingest_All_Info_of_SchoolYear",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": false,
+										"parameters": {
+											"schoolYearFolder": {
+												"value": "@item().name",
+												"type": "Expression"
+											},
+											"facultyName": {
+												"value": "@pipeline().parameters.facultyName",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 8,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"facultyName": {
+						"type": "string",
+						"defaultValue": "Khoa Công nghệ Thông tin"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-20T11:26:00Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_all_folder_in_faculty')]",
+				"[concat(variables('factoryId'), '/pipelines/Ingest_All_Info_of_SchoolYear')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Ingest_All_Files_in_Root')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Faculty",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_root_folder",
+								"type": "DatasetReference",
+								"parameters": {
+									"rootFolder": "info"
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Faculty",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Faculty').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Execute Pipeline1",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Ingest_All_Files_in_Faculty",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": false,
+										"parameters": {
+											"facultyName": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 8,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-20T11:26:01Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_root_folder')]",
+				"[concat(variables('factoryId'), '/pipelines/Ingest_All_Files_in_Faculty')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Ingest_All_Info_of_SchoolYear')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Files in SchoolYearFolder",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_all_info_in_schoolyear",
+								"type": "DatasetReference",
+								"parameters": {
+									"schoolYear": {
+										"value": "@pipeline().parameters.schoolYearFolder",
+										"type": "Expression"
+									},
+									"facultyName": {
+										"value": "@pipeline().parameters.facultyName",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "For Each Filename",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Files in SchoolYearFolder",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Files in SchoolYearFolder').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "IngestData",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "RawtoStaging",
+											"type": "DataFlowReference",
+											"parameters": {
+												"facultyName": {
+													"value": "'@{pipeline().parameters.facultyName}'",
+													"type": "Expression"
+												},
+												"schoolYear": {
+													"value": "'@{pipeline().parameters.schoolYearFolder}'",
+													"type": "Expression"
+												},
+												"sinkFileName": {
+													"value": "'@{item().name}'",
+													"type": "Expression"
+												},
+												"className": {
+													"value": "'@{item().name}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"Rawdata": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													},
+													"schoolYearFolder": {
+														"value": "@pipeline().parameters.schoolYearFolder",
+														"type": "Expression"
+													},
+													"facultyName": {
+														"value": "@pipeline().parameters.facultyName",
+														"type": "Expression"
+													}
+												},
+												"Datalake": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 16,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine",
+										"runConcurrently": true
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 10,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"schoolYearFolder": {
+						"type": "string",
+						"defaultValue": "Khóa 41 (2015)"
+					},
+					"facultyName": {
+						"type": "string",
+						"defaultValue": "Khoa Sinh học"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-20T11:25:58Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_all_info_in_schoolyear')]",
+				"[concat(variables('factoryId'), '/dataflows/RawtoStaging')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_mark_files",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata1').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Data flow1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dataflow1",
+											"type": "DataFlowReference",
+											"parameters": {
+												"MSSV": {
+													"value": "'@{item().name}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"RawMarktoStaging": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												},
+												"sink1": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 5,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_mark_files')]",
+				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_all_files_in_schooyear')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_raw_data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"facultyFolderName": {
+						"type": "string"
+					},
+					"schoolyearFolderName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": {
+							"value": "@concat('info/',dataset().facultyFolderName,'/',dataset().schoolyearFolderName)",
+							"type": "Expression"
+						},
+						"container": "rawdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_raw_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_all_folder_in_faculty')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_raw_data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"facultyName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": {
+							"value": "@concat('info/',dataset().facultyName)",
+							"type": "Expression"
+						},
+						"container": "rawdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_raw_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_all_info_in_schoolyear')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_raw_data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"schoolYear": {
+						"type": "string"
+					},
+					"facultyName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": {
+							"value": "@concat('info/',dataset().facultyName,'/',dataset().schoolYear)",
+							"type": "Expression"
+						},
+						"container": "rawdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_raw_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_info_staging')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_datalake",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "info_test",
+						"fileSystem": "dhsp"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_mark_files')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_raw_data",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "marks",
+						"container": "rawdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "STT",
+						"type": "String"
+					},
+					{
+						"name": "Mã học phần",
+						"type": "String"
+					},
+					{
+						"name": "Tên học phần",
+						"type": "String"
+					},
+					{
+						"name": "Tín chỉ",
+						"type": "String"
+					},
+					{
+						"name": "Loại môn học",
+						"type": "String"
+					},
+					{
+						"name": "Điểm",
+						"type": "String"
+					},
+					{
+						"name": "Điểm chữ",
+						"type": "String"
+					},
+					{
+						"name": "Kết quả",
+						"type": "String"
+					},
+					{
+						"name": "Chi tiết",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_raw_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_mark_staging')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_datalake",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "mark_test",
+						"fileSystem": "dhsp"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_raw_info')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_raw_data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					},
+					"schoolYearFolder": {
+						"type": "string"
+					},
+					"facultyName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat('info/',dataset().facultyName,'/',dataset().schoolYearFolder)\n",
+							"type": "Expression"
+						},
+						"container": "rawdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Prop_0",
+						"type": "String"
+					},
+					{
+						"name": "STT",
+						"type": "String"
+					},
+					{
+						"name": "Mã sinh viên",
+						"type": "String"
+					},
+					{
+						"name": "Họ lót",
+						"type": "String"
+					},
+					{
+						"name": "Tên",
+						"type": "String"
+					},
+					{
+						"name": "Ngày sinh",
+						"type": "String"
+					},
+					{
+						"name": "Xem điểm",
+						"type": "String"
+					},
+					{
+						"name": "Lịch học",
+						"type": "String"
+					},
+					{
+						"name": "Thông tin",
+						"type": "String"
+					},
+					{
+						"name": "Lịch thi",
+						"type": "String"
+					},
+					{
+						"name": "Học phí",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_raw_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_raw_mark')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_raw_data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "marks",
+						"container": "rawdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "STT",
+						"type": "String"
+					},
+					{
+						"name": "Mã học phần",
+						"type": "String"
+					},
+					{
+						"name": "Tên học phần",
+						"type": "String"
+					},
+					{
+						"name": "Tín chỉ",
+						"type": "String"
+					},
+					{
+						"name": "Loại môn học",
+						"type": "String"
+					},
+					{
+						"name": "Điểm",
+						"type": "String"
+					},
+					{
+						"name": "Điểm chữ",
+						"type": "String"
+					},
+					{
+						"name": "Kết quả",
+						"type": "String"
+					},
+					{
+						"name": "Chi tiết",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_raw_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_root_folder')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_raw_data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"rootFolder": {
+						"type": "string",
+						"defaultValue": "info_test"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": {
+							"value": "@dataset().rootFolder",
+							"type": "Expression"
+						},
+						"container": "rawdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_raw_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_datalake')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_datalake_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_datalake_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_raw_data')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_raw_data_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RawtoStaging')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_raw_info",
+								"type": "DatasetReference"
+							},
+							"name": "Rawdata"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_info_staging",
+								"type": "DatasetReference"
+							},
+							"name": "Datalake",
+							"rejectedDataLinkedService": {
+								"referenceName": "ls_datalake",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddDimensionalAttribute"
+						},
+						{
+							"name": "SelectNeededColumn"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     facultyName as string,",
+						"     schoolYear as string,",
+						"     sinkFileName as string,",
+						"     className as string",
+						"}",
+						"source(output(",
+						"          Prop_0 as string,",
+						"          STT as string,",
+						"          {Mã sinh viên} as string,",
+						"          {Họ lót} as string,",
+						"          {Tên} as string,",
+						"          {Ngày sinh} as string,",
+						"          {Xem điểm} as string,",
+						"          {Lịch học} as string,",
+						"          {Thông tin} as string,",
+						"          {Lịch thi} as string,",
+						"          {Học phí} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Rawdata",
+						"Rawdata derive({Niên khoá} = $schoolYear,",
+						"          Khoa = $facultyName,",
+						"          {Ngày tạo} = currentDate(),",
+						"          {Tên lớp} = split($className, '.')[1]) ~> AddDimensionalAttribute",
+						"AddDimensionalAttribute select(skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectNeededColumn",
+						"SelectNeededColumn sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:[(concat($facultyName,'_', $schoolYear, '_', $sinkFileName))],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> Datalake"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_raw_info')]",
+				"[concat(variables('factoryId'), '/datasets/ds_info_staging')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_raw_mark",
+								"type": "DatasetReference"
+							},
+							"name": "RawMarktoStaging"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_mark_staging",
+								"type": "DatasetReference"
+							},
+							"name": "sink1",
+							"rejectedDataLinkedService": {
+								"referenceName": "ls_datalake",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedColumn1"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     MSSV as string",
+						"}",
+						"source(output(",
+						"          STT as string,",
+						"          {Mã học phần} as string,",
+						"          {Tên học phần} as string,",
+						"          {Tín chỉ} as string,",
+						"          {Loại môn học} as string,",
+						"          {Điểm} as string,",
+						"          {Điểm chữ} as string,",
+						"          {Kết quả} as string,",
+						"          {Chi tiết} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> RawMarktoStaging",
+						"RawMarktoStaging derive(MSSV = $MSSV) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:[($MSSV)],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_raw_mark')]",
+				"[concat(variables('factoryId'), '/datasets/ds_mark_staging')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
+			]
+		}
+	]
+}
