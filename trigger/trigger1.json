@@ -15,9 +15,9 @@
 		"typeProperties": {
 			"recurrence": {
 				"frequency": "Minute",
-				"interval": 3,
+				"interval": 10,
 				"startTime": "2024-05-20T18:07:00",
-				"endTime": "2024-05-21T08:59:00",
+				"endTime": "2024-05-21T18:56:00",
 				"timeZone": "SE Asia Standard Time"
 			}
 		}
