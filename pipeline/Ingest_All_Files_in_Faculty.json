@@ -1,0 +1,101 @@
+{
+	"name": "Ingest_All_Files_in_Faculty",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get All Folder in A Faculty",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_all_folder_in_faculty",
+						"type": "DatasetReference",
+						"parameters": {
+							"facultyName": {
+								"value": "@pipeline().parameters.facultyName",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get All Folder in A Faculty",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get All Folder in A Faculty').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Load all data in each Faculty",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Ingest_All_Info_of_SchoolYear",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": false,
+								"parameters": {
+									"schoolYearFolder": {
+										"value": "@item().name",
+										"type": "Expression"
+									},
+									"facultyName": {
+										"value": "@pipeline().parameters.facultyName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"concurrency": 8,
+		"parameters": {
+			"facultyName": {
+				"type": "string",
+				"defaultValue": "Khoa Công nghệ Thông tin"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-05-20T11:26:00Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

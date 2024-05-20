@@ -1,0 +1,9 @@
+{
+	"name": "dhspdataprocessing",
+	"location": "southeastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "6289bd40-aa13-44f6-8ba1-09462738d13a",
+		"tenantId": "28baf55d-2c9b-48de-875d-ed6c7f90060c"
+	}
+}

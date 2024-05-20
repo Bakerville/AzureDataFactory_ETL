@@ -1,0 +1,87 @@
+{
+	"name": "ds_raw_info",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_raw_data",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "string"
+			},
+			"schoolYearFolder": {
+				"type": "string"
+			},
+			"facultyName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@concat('info/',dataset().facultyName,'/',dataset().schoolYearFolder)\n",
+					"type": "Expression"
+				},
+				"container": "rawdata"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Prop_0",
+				"type": "String"
+			},
+			{
+				"name": "STT",
+				"type": "String"
+			},
+			{
+				"name": "Mã sinh viên",
+				"type": "String"
+			},
+			{
+				"name": "Họ lót",
+				"type": "String"
+			},
+			{
+				"name": "Tên",
+				"type": "String"
+			},
+			{
+				"name": "Ngày sinh",
+				"type": "String"
+			},
+			{
+				"name": "Xem điểm",
+				"type": "String"
+			},
+			{
+				"name": "Lịch học",
+				"type": "String"
+			},
+			{
+				"name": "Thông tin",
+				"type": "String"
+			},
+			{
+				"name": "Lịch thi",
+				"type": "String"
+			},
+			{
+				"name": "Học phí",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

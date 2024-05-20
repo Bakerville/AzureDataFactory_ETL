@@ -1,0 +1,33 @@
+{
+	"name": "ds_root_folder",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_raw_data",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"rootFolder": {
+				"type": "string",
+				"defaultValue": "info_test"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": {
+					"value": "@dataset().rootFolder",
+					"type": "Expression"
+				},
+				"container": "rawdata"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

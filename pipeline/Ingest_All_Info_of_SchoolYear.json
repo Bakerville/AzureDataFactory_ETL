@@ -1,0 +1,141 @@
+{
+	"name": "Ingest_All_Info_of_SchoolYear",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get All Files in SchoolYearFolder",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_all_info_in_schoolyear",
+						"type": "DatasetReference",
+						"parameters": {
+							"schoolYear": {
+								"value": "@pipeline().parameters.schoolYearFolder",
+								"type": "Expression"
+							},
+							"facultyName": {
+								"value": "@pipeline().parameters.facultyName",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "For Each Filename",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get All Files in SchoolYearFolder",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get All Files in SchoolYearFolder').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "IngestData",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "RawtoStaging",
+									"type": "DataFlowReference",
+									"parameters": {
+										"facultyName": {
+											"value": "'@{pipeline().parameters.facultyName}'",
+											"type": "Expression"
+										},
+										"schoolYear": {
+											"value": "'@{pipeline().parameters.schoolYearFolder}'",
+											"type": "Expression"
+										},
+										"sinkFileName": {
+											"value": "'@{item().name}'",
+											"type": "Expression"
+										},
+										"className": {
+											"value": "'@{item().name}'",
+											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"Rawdata": {
+											"fileName": {
+												"value": "@item().name",
+												"type": "Expression"
+											},
+											"schoolYearFolder": {
+												"value": "@pipeline().parameters.schoolYearFolder",
+												"type": "Expression"
+											},
+											"facultyName": {
+												"value": "@pipeline().parameters.facultyName",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 16,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine",
+								"runConcurrently": true
+							}
+						}
+					]
+				}
+			}
+		],
+		"concurrency": 10,
+		"parameters": {
+			"schoolYearFolder": {
+				"type": "string",
+				"defaultValue": "Khóa 41 (2015)"
+			},
+			"facultyName": {
+				"type": "string",
+				"defaultValue": "Khoa Sinh học"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-05-20T11:25:58Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

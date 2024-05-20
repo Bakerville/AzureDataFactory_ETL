@@ -1,0 +1,35 @@
+{
+	"name": "ds_all_info_in_schoolyear",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_raw_data",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"schoolYear": {
+				"type": "string"
+			},
+			"facultyName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": {
+					"value": "@concat('info/',dataset().facultyName,'/',dataset().schoolYear)",
+					"type": "Expression"
+				},
+				"container": "rawdata"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
