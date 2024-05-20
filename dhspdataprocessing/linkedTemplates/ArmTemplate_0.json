@@ -627,7 +627,7 @@
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false) ~> RawMarktoStaging",
-						"RawMarktoStaging derive(MSSV = split($MSSV,'.')[1]) ~> derivedColumn1",
+						"RawMarktoStaging derive(MSSV = replace($MSSV, '.csv', '')) ~> derivedColumn1",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     partitionFileNames:[($MSSV)],",
@@ -1022,7 +1022,7 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Started",
+				"runtimeState": "Stopped",
 				"pipelines": [
 					{
 						"pipelineReference": {
