@@ -958,12 +958,12 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/trigger1')]",
+			"name": "[concat(parameters('factoryName'), '/tr_mark')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Stopped",
+				"runtimeState": "Started",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -978,8 +978,8 @@
 					"recurrence": {
 						"frequency": "Minute",
 						"interval": 10,
-						"startTime": "2024-05-20T21:17:00",
-						"endTime": "2024-05-21T14:14:54",
+						"startTime": "2024-05-21T08:30:00",
+						"endTime": "2024-05-21T09:02:54",
 						"timeZone": "SE Asia Standard Time"
 					}
 				}
