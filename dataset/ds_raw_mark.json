@@ -19,7 +19,7 @@
 					"value": "@dataset().fileName",
 					"type": "Expression"
 				},
-				"folderPath": "marks",
+				"folderPath": "mark_test",
 				"container": "rawdata"
 			},
 			"columnDelimiter": ",",
