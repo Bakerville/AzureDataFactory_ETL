@@ -1,5 +1,5 @@
 {
-	"name": "ds_info_staging",
+	"name": "ds_staging_khoa",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_datalake",
@@ -84,6 +84,5 @@
 				"type": "String"
 			}
 		]
-	},
-	"type": "Microsoft.DataFactory/factories/datasets"
+	}
 }

@@ -1,5 +1,5 @@
 {
-	"name": "pipeline1",
+	"name": "Ingest_Mark_to_Staging",
 	"properties": {
 		"activities": [
 			{
@@ -24,6 +24,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -63,7 +64,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "dataflow1",
+									"referenceName": "MarktoStaging",
 									"type": "DataFlowReference",
 									"parameters": {
 										"MSSV": {
