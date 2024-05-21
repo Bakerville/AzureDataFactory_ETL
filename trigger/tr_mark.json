@@ -1,5 +1,5 @@
 {
-	"name": "trigger1",
+	"name": "tr_mark",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Stopped",
@@ -15,9 +15,9 @@
 		"typeProperties": {
 			"recurrence": {
 				"frequency": "Minute",
-				"interval": 5,
-				"startTime": "2024-05-20T21:17:00",
-				"endTime": "2024-05-21T14:14:54",
+				"interval": 10,
+				"startTime": "2024-05-21T08:30:00",
+				"endTime": "2024-05-21T09:02:54",
 				"timeZone": "SE Asia Standard Time"
 			}
 		}
