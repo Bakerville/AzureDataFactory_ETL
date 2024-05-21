@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'ls_datalake'"
 		},
+		"ls_datawarehouse_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_datawarehouse'"
+		},
 		"ls_raw_data_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ls_raw_data'"
@@ -18,6 +22,18 @@
 		"ls_datalake_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://dhspdatalake.dfs.core.windows.net/"
+		},
+		"ls_datawarehouse_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "thuytd3-sqlserver.database.windows.net"
+		},
+		"ls_datawarehouse_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "HCMUE"
+		},
+		"ls_datawarehouse_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "admin1"
 		}
 	},
 	"variables": {
@@ -381,7 +397,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"name": "[concat(parameters('factoryName'), '/Ingest_Mark_to_Staging')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -449,7 +465,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"dataflow": {
-											"referenceName": "dataflow1",
+											"referenceName": "MarktoStaging",
 											"type": "DataFlowReference",
 											"parameters": {
 												"MSSV": {
@@ -487,7 +503,74 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_mark_files')]",
-				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+				"[concat(variables('factoryId'), '/dataflows/MarktoStaging')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dimKhoa')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_datawarehouse",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TenKhoa",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "subdim_Khoa"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_datawarehouse')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dimNienKhoa')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_datawarehouse",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "NienKhoa",
+						"type": "nvarchar"
+					},
+					{
+						"name": "NamHoc",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "subdim_NienKhoa"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_datawarehouse')]"
 			]
 		},
 		{
@@ -626,7 +709,72 @@
 					"firstRowAsHeader": true,
 					"quoteChar": "\""
 				},
-				"schema": []
+				"schema": [
+					{
+						"name": "Prop_0",
+						"type": "String"
+					},
+					{
+						"name": "STT",
+						"type": "String"
+					},
+					{
+						"name": "Mã sinh viên",
+						"type": "String"
+					},
+					{
+						"name": "Họ lót",
+						"type": "String"
+					},
+					{
+						"name": "Tên",
+						"type": "String"
+					},
+					{
+						"name": "Ngày sinh",
+						"type": "String"
+					},
+					{
+						"name": "Xem điểm",
+						"type": "String"
+					},
+					{
+						"name": "Lịch học",
+						"type": "String"
+					},
+					{
+						"name": "Thông tin",
+						"type": "String"
+					},
+					{
+						"name": "Lịch thi",
+						"type": "String"
+					},
+					{
+						"name": "Học phí",
+						"type": "String"
+					},
+					{
+						"name": "_c0",
+						"type": "String"
+					},
+					{
+						"name": "Niên khoá",
+						"type": "String"
+					},
+					{
+						"name": "Khoa",
+						"type": "String"
+					},
+					{
+						"name": "Ngày tạo",
+						"type": "String"
+					},
+					{
+						"name": "Tên lớp",
+						"type": "String"
+					}
+				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
@@ -928,6 +1076,99 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_staging_khoa')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_datalake",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "info_test",
+						"fileSystem": "dhsp"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Prop_0",
+						"type": "String"
+					},
+					{
+						"name": "STT",
+						"type": "String"
+					},
+					{
+						"name": "Mã sinh viên",
+						"type": "String"
+					},
+					{
+						"name": "Họ lót",
+						"type": "String"
+					},
+					{
+						"name": "Tên",
+						"type": "String"
+					},
+					{
+						"name": "Ngày sinh",
+						"type": "String"
+					},
+					{
+						"name": "Xem điểm",
+						"type": "String"
+					},
+					{
+						"name": "Lịch học",
+						"type": "String"
+					},
+					{
+						"name": "Thông tin",
+						"type": "String"
+					},
+					{
+						"name": "Lịch thi",
+						"type": "String"
+					},
+					{
+						"name": "Học phí",
+						"type": "String"
+					},
+					{
+						"name": "_c0",
+						"type": "String"
+					},
+					{
+						"name": "Niên khoá",
+						"type": "String"
+					},
+					{
+						"name": "Khoa",
+						"type": "String"
+					},
+					{
+						"name": "Ngày tạo",
+						"type": "String"
+					},
+					{
+						"name": "Tên lớp",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ls_datalake')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -939,6 +1180,29 @@
 					"accountKey": {
 						"type": "SecureString",
 						"value": "[parameters('ls_datalake_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_datawarehouse')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('ls_datawarehouse_properties_typeProperties_server')]",
+					"database": "[parameters('ls_datawarehouse_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"hostNameInCertificate": "",
+					"authenticationType": "SQL",
+					"userName": "[parameters('ls_datawarehouse_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_datawarehouse_password')]"
 					}
 				}
 			},
@@ -963,11 +1227,11 @@
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Started",
+				"runtimeState": "Stopped",
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "pipeline1",
+							"referenceName": "Ingest_Mark_to_Staging",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -985,7 +1249,167 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pipeline1')]"
+				"[concat(variables('factoryId'), '/pipelines/Ingest_Mark_to_Staging')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/IntegrationtoKhoa')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_info_staging",
+								"type": "DatasetReference"
+							},
+							"name": "InfoSInhVien"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "dimKhoa",
+								"type": "DatasetReference"
+							},
+							"name": "sink1",
+							"rejectedDataLinkedService": {
+								"referenceName": "ls_datalake",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Prop_0 as string,",
+						"          STT as string,",
+						"          {Mã sinh viên} as string,",
+						"          {Họ lót} as string,",
+						"          {Tên} as string,",
+						"          {Ngày sinh} as string,",
+						"          {Xem điểm} as string,",
+						"          {Lịch học} as string,",
+						"          {Thông tin} as string,",
+						"          {Lịch thi} as string,",
+						"          {Học phí} as string,",
+						"          {_c0} as string,",
+						"          {Niên khoá} as string,",
+						"          Khoa as string,",
+						"          {Ngày tạo} as string,",
+						"          {Tên lớp} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> InfoSInhVien",
+						"InfoSInhVien select(mapColumn(",
+						"          Khoa",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ID as integer,",
+						"          TenKhoa as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'allErrors',",
+						"     transactionCommit: 'batch',",
+						"     reportSuccessOnError: false,",
+						"     mapColumn(",
+						"          TenKhoa = Khoa",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_info_staging')]",
+				"[concat(variables('factoryId'), '/datasets/dimKhoa')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MarktoStaging')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_raw_mark",
+								"type": "DatasetReference"
+							},
+							"name": "RawMarktoStaging"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_mark_staging",
+								"type": "DatasetReference"
+							},
+							"name": "sink1",
+							"rejectedDataLinkedService": {
+								"referenceName": "ls_datalake",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedColumn1"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     MSSV as string",
+						"}",
+						"source(output(",
+						"          STT as string,",
+						"          {Mã học phần} as string,",
+						"          {Tên học phần} as string,",
+						"          {Tín chỉ} as string,",
+						"          {Loại môn học} as string,",
+						"          {Điểm} as string,",
+						"          {Điểm chữ} as string,",
+						"          {Kết quả} as string,",
+						"          {Chi tiết} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> RawMarktoStaging",
+						"RawMarktoStaging derive(MSSV = replace($MSSV, '.csv', '')) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['$MSSV'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_raw_mark')]",
+				"[concat(variables('factoryId'), '/datasets/ds_mark_staging')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
 			]
 		},
 		{
@@ -1056,6 +1480,24 @@
 						"     skipDuplicateMapOutputs: true) ~> SelectNeededColumn",
 						"SelectNeededColumn sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     input(",
+						"          Prop_0 as string,",
+						"          STT as string,",
+						"          {Mã sinh viên} as string,",
+						"          {Họ lót} as string,",
+						"          {Tên} as string,",
+						"          {Ngày sinh} as string,",
+						"          {Xem điểm} as string,",
+						"          {Lịch học} as string,",
+						"          {Thông tin} as string,",
+						"          {Lịch thi} as string,",
+						"          {Học phí} as string,",
+						"          {_c0} as string,",
+						"          {Niên khoá} as string,",
+						"          Khoa as string,",
+						"          {Ngày tạo} as string,",
+						"          {Tên lớp} as string",
+						"     ),",
 						"     partitionFileNames:[(concat($facultyName,'_', $schoolYear, '_', $sinkFileName))],",
 						"     umask: 0022,",
 						"     preCommands: [],",
@@ -1069,77 +1511,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_raw_info')]",
 				"[concat(variables('factoryId'), '/datasets/ds_info_staging')]",
-				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "ds_raw_mark",
-								"type": "DatasetReference"
-							},
-							"name": "RawMarktoStaging"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "ds_mark_staging",
-								"type": "DatasetReference"
-							},
-							"name": "sink1",
-							"rejectedDataLinkedService": {
-								"referenceName": "ls_datalake",
-								"type": "LinkedServiceReference"
-							}
-						}
-					],
-					"transformations": [
-						{
-							"name": "derivedColumn1"
-						}
-					],
-					"scriptLines": [
-						"parameters{",
-						"     MSSV as string",
-						"}",
-						"source(output(",
-						"          STT as string,",
-						"          {Mã học phần} as string,",
-						"          {Tên học phần} as string,",
-						"          {Tín chỉ} as string,",
-						"          {Loại môn học} as string,",
-						"          {Điểm} as string,",
-						"          {Điểm chữ} as string,",
-						"          {Kết quả} as string,",
-						"          {Chi tiết} as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> RawMarktoStaging",
-						"RawMarktoStaging derive(MSSV = replace($MSSV, '.csv', '')) ~> derivedColumn1",
-						"derivedColumn1 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     partitionFileNames:['$MSSV'],",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     partitionBy('hash', 1)) ~> sink1"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_raw_mark')]",
-				"[concat(variables('factoryId'), '/datasets/ds_mark_staging')]",
 				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
 			]
 		}

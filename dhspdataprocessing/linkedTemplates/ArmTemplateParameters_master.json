@@ -8,11 +8,23 @@
 		"ls_datalake_accountKey": {
 			"value": ""
 		},
+		"ls_datawarehouse_password": {
+			"value": ""
+		},
 		"ls_raw_data_connectionString": {
 			"value": ""
 		},
 		"ls_datalake_properties_typeProperties_url": {
 			"value": "https://dhspdatalake.dfs.core.windows.net/"
+		},
+		"ls_datawarehouse_properties_typeProperties_server": {
+			"value": "thuytd3-sqlserver.database.windows.net"
+		},
+		"ls_datawarehouse_properties_typeProperties_database": {
+			"value": "HCMUE"
+		},
+		"ls_datawarehouse_properties_typeProperties_userName": {
+			"value": "admin1"
 		},
 		"containerUri": {
 			"value": ""
