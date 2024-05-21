@@ -403,7 +403,7 @@
 							"value": "@dataset().fileName",
 							"type": "Expression"
 						},
-						"folderPath": "marks",
+						"folderPath": "mark_test",
 						"container": "rawdata"
 					},
 					"columnDelimiter": ",",
@@ -1036,9 +1036,9 @@
 				"typeProperties": {
 					"recurrence": {
 						"frequency": "Minute",
-						"interval": 10,
+						"interval": 20,
 						"startTime": "2024-05-21T08:30:00",
-						"endTime": "2024-05-22T09:02:54",
+						"endTime": "2024-05-21T10:02:54",
 						"timeZone": "SE Asia Standard Time"
 					}
 				}
