@@ -1,0 +1,84 @@
+{
+	"name": "ETLtoMonHoc",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_mark_data_staging",
+						"type": "DatasetReference"
+					},
+					"name": "SourceMark"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_dim_monhoc",
+						"type": "DatasetReference"
+					},
+					"name": "dimMonHoc"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SelectForMonHoc"
+				},
+				{
+					"name": "alterRow1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          STT as string,",
+				"          {Mã học phần} as string,",
+				"          {Tên học phần} as string,",
+				"          {Tín chỉ} as integer,",
+				"          {Loại môn học} as string,",
+				"          {Điểm} as float,",
+				"          {Điểm chữ} as string,",
+				"          {Kết quả} as string,",
+				"          {Chi tiết} as string,",
+				"          MSSV as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> SourceMark",
+				"SourceMark select(mapColumn(",
+				"          {Mã học phần},",
+				"          {Tên học phần},",
+				"          {Tín chỉ},",
+				"          {Loại môn học}",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectForMonHoc",
+				"SelectForMonHoc alterRow(upsertIf(true())) ~> alterRow1",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ID as integer,",
+				"          MaHP as string,",
+				"          TenHP as string,",
+				"          TinChi as integer,",
+				"          LoaiMH as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['MaHP'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          MaHP = {Mã học phần},",
+				"          TenHP = {Tên học phần},",
+				"          TinChi = {Tín chỉ},",
+				"          LoaiMH = {Loại môn học}",
+				"     )) ~> dimMonHoc"
+			]
+		}
+	}
+}

@@ -1,0 +1,25 @@
+{
+	"name": "tr_fact_diemso",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "ETL_to_fact_DiemSo",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 20,
+				"startTime": "2024-05-23T12:06:00",
+				"endTime": "2024-05-23T13:21:00",
+				"timeZone": "SE Asia Standard Time"
+			}
+		}
+	}
+}

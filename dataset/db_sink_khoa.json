@@ -1,0 +1,27 @@
+{
+	"name": "db_sink_khoa",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_datawarehouse",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "TenKhoa",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "subdim_Khoa"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

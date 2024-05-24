@@ -1,0 +1,165 @@
+{
+	"name": "ETltoFactMonHoc",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_mark_data_staging",
+						"type": "DatasetReference"
+					},
+					"name": "SourceMarkdata"
+				},
+				{
+					"dataset": {
+						"referenceName": "db_dim_SinhVien",
+						"type": "DatasetReference"
+					},
+					"name": "LookupSinhVien"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_dim_monhoc",
+						"type": "DatasetReference"
+					},
+					"name": "LookupMonHoc"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_fact_mark",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SelectForFact"
+				},
+				{
+					"name": "LookupdimSV"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "LookupdimMonHoc"
+				},
+				{
+					"name": "select2"
+				},
+				{
+					"name": "filter1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          STT as string,",
+				"          {Mã học phần} as string,",
+				"          {Tên học phần} as string,",
+				"          {Tín chỉ} as string,",
+				"          {Loại môn học} as string,",
+				"          {Điểm} as double,",
+				"          {Điểm chữ} as string,",
+				"          {Kết quả} as string,",
+				"          {Chi tiết} as string,",
+				"          MSSV as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> SourceMarkdata",
+				"source(output(",
+				"          ID as integer,",
+				"          MaSV as string,",
+				"          HoTenLot as string,",
+				"          Ten as string,",
+				"          NgaySinh as timestamp,",
+				"          Tuoi as integer,",
+				"          TenLop as string,",
+				"          ID_NienKhoa as integer,",
+				"          ID_Khoa as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> LookupSinhVien",
+				"source(output(",
+				"          ID as integer,",
+				"          MaHP as string,",
+				"          TenHP as string,",
+				"          TinChi as integer,",
+				"          LoaiMH as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> LookupMonHoc",
+				"SourceMarkdata select(mapColumn(",
+				"          {Mã học phần},",
+				"          {Điểm},",
+				"          {Điểm chữ},",
+				"          {Kết quả},",
+				"          MSSV",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectForFact",
+				"SelectForFact, LookupSinhVien lookup(trim(MSSV) == trim(MaSV),",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LookupdimSV",
+				"LookupdimSV select(mapColumn(",
+				"          {Mã học phần},",
+				"          {Điểm},",
+				"          {Điểm chữ},",
+				"          {Kết quả},",
+				"          MSSV,",
+				"          ID_SinhVien = ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1, LookupMonHoc lookup(trim({Mã học phần}) == trim(MaHP),",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LookupdimMonHoc",
+				"LookupdimMonHoc select(mapColumn(",
+				"          {Mã học phần},",
+				"          {Điểm},",
+				"          {Điểm chữ},",
+				"          {Kết quả},",
+				"          MSSV,",
+				"          ID_SinhVien,",
+				"          ID_MonHoc = ID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"select2 filter((!isNull(ID_SinhVien)) && (!isNull(ID_MonHoc))) ~> filter1",
+				"filter1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ID as integer,",
+				"          ID_SinhVien as integer,",
+				"          ID_HocPhan as integer,",
+				"          Diem as double,",
+				"          DiemChu as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ID_SinhVien,",
+				"          ID_HocPhan = ID_MonHoc,",
+				"          Diem = {Điểm},",
+				"          DiemChu = {Điểm chữ}",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}

@@ -6,7 +6,7 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "ds_info_staging",
+						"referenceName": "ds_staging_khoa",
 						"type": "DatasetReference"
 					},
 					"name": "InfoSInhVien"
@@ -15,19 +15,43 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "db_hcmue",
+						"referenceName": "db_sink_NienKhoa",
 						"type": "DatasetReference"
 					},
-					"name": "sink1",
-					"rejectedDataLinkedService": {
-						"referenceName": "ls_datalake",
-						"type": "LinkedServiceReference"
-					}
+					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "db_sink_khoa",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
 				}
 			],
 			"transformations": [
 				{
-					"name": "select1"
+					"name": "FilterFirstRow"
+				},
+				{
+					"name": "SelectForKhoa"
+				},
+				{
+					"name": "SelectForNienKhoa"
+				},
+				{
+					"name": "AddNamColumn"
+				},
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "aggregate2"
+				},
+				{
+					"name": "AlterRow1"
+				},
+				{
+					"name": "AlterRow2"
 				}
 			],
 			"scriptLines": [
@@ -52,21 +76,41 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> InfoSInhVien",
-				"InfoSInhVien select(mapColumn(",
-				"          Khoa",
+				"InfoSInhVien filter(STT == '1') ~> FilterFirstRow",
+				"FilterFirstRow select(mapColumn(",
+				"          STT,",
+				"          Khoa,",
+				"          {Ngày tạo}",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> select1",
-				"select1 sink(allowSchemaDrift: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectForKhoa",
+				"FilterFirstRow select(mapColumn(",
+				"          STT,",
+				"          {Niên khoá}",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectForNienKhoa",
+				"SelectForNienKhoa derive({Năm} = toInteger(substring({Niên khoá},5,4)),",
+				"          {Khoá} = substring({Niên khoá},1,7)) ~> AddNamColumn",
+				"AddNamColumn aggregate(groupBy({Niên khoá},",
+				"          {Khoá}),",
+				"     {Năm} = first({Năm})) ~> aggregate1",
+				"SelectForKhoa aggregate(groupBy(Khoa),",
+				"     db_Khoa = first(Khoa)) ~> aggregate2",
+				"aggregate2 alterRow(upsertIf(true())) ~> AlterRow1",
+				"aggregate1 alterRow(upsertIf(true())) ~> AlterRow2",
+				"AlterRow2 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          ID as integer,",
-				"          TenKhoa as string",
+				"          NienKhoa as string,",
+				"          NamHoc as integer",
 				"     ),",
 				"     deletable:false,",
-				"     insertable:true,",
+				"     insertable:false,",
 				"     updateable:false,",
-				"     upsertable:false,",
+				"     upsertable:true,",
+				"     keys:['NienKhoa'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
@@ -74,8 +118,27 @@
 				"     transactionCommit: 'batch',",
 				"     reportSuccessOnError: false,",
 				"     mapColumn(",
+				"          NienKhoa = {Khoá},",
+				"          NamHoc = {Năm}",
+				"     )) ~> sink1",
+				"AlterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ID as integer,",
+				"          TenKhoa as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['TenKhoa'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
 				"          TenKhoa = Khoa",
-				"     )) ~> sink1"
+				"     )) ~> sink2"
 			]
 		}
 	}

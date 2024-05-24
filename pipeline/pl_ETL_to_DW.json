@@ -1,5 +1,5 @@
 {
-	"name": "Ingest_Mark_to_Staging",
+	"name": "pl_ETL_to_DW",
 	"properties": {
 		"activities": [
 			{
@@ -16,14 +16,14 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "ds_mark_files",
+						"referenceName": "ds_info_staging",
 						"type": "DatasetReference"
 					},
 					"fieldList": [
 						"childItems"
 					],
 					"storeSettings": {
-						"type": "AzureBlobStorageReadSettings",
+						"type": "AzureBlobFSReadSettings",
 						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
@@ -64,19 +64,23 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "MarktoStaging",
+									"referenceName": "IntegrationtoKhoa",
 									"type": "DataFlowReference",
-									"parameters": {
-										"MSSV": {
-											"value": "'@{item().name}'",
-											"type": "Expression"
-										}
-									},
 									"datasetParameters": {
-										"RawMarktoStaging": {
+										"InfoSInhVien": {
 											"fileName": {
 												"value": "@item().name",
 												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceParameters": {
+										"InfoSInhVien": {
+											"schemaLinkedService": {
+												"fileName": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
 											}
 										}
 									}
@@ -92,9 +96,14 @@
 				}
 			}
 		],
-		"concurrency": 5,
+		"concurrency": 15,
+		"policy": {
+			"elapsedTimeMetric": {
+				"duration": "00:10:00"
+			}
+		},
 		"annotations": [],
-		"lastPublishTime": "2024-05-21T07:34:11Z"
+		"lastPublishTime": "2024-05-22T07:49:04Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }

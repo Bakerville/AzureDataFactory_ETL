@@ -1,0 +1,42 @@
+{
+	"name": "ds_fact_mark",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_datawarehouse",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ID_SinhVien",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ID_HocPhan",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Diem",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "DiemChu",
+				"type": "char"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "fact_DiemSo"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

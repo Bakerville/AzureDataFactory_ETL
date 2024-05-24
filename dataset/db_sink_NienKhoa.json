@@ -1,0 +1,32 @@
+{
+	"name": "db_sink_NienKhoa",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_datawarehouse",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "NienKhoa",
+				"type": "nvarchar"
+			},
+			{
+				"name": "NamHoc",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "subdim_NienKhoa"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,17 +1,27 @@
 {
-	"name": "ds_mark_files",
+	"name": "ds_mark_data_staging",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "ls_raw_data",
+			"referenceName": "ls_datalake",
 			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "string",
+				"defaultValue": "41.01.101.001.csv"
+			}
 		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobStorageLocation",
-				"folderPath": "marks",
-				"container": "rawdata"
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": "mark_test",
+				"fileSystem": "dhsp"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
@@ -53,6 +63,10 @@
 			},
 			{
 				"name": "Chi tiết",
+				"type": "String"
+			},
+			{
+				"name": "MSSV",
 				"type": "String"
 			}
 		]

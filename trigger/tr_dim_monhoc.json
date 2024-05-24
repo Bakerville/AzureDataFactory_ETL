@@ -1,0 +1,31 @@
+{
+	"name": "tr_dim_monhoc",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "ETL_MonHoc",
+					"type": "PipelineReference"
+				}
+			},
+			{
+				"pipelineReference": {
+					"referenceName": "pipeline1",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 20,
+				"startTime": "2024-05-23T11:57:00",
+				"endTime": "2024-05-23T12:33:00",
+				"timeZone": "SE Asia Standard Time"
+			}
+		}
+	}
+}

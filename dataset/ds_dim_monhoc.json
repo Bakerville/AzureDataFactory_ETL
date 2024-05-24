@@ -1,0 +1,40 @@
+{
+	"name": "ds_dim_monhoc",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_datawarehouse",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "MaHP",
+				"type": "char"
+			},
+			{
+				"name": "TenHP",
+				"type": "nvarchar"
+			},
+			{
+				"name": "TinChi",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "LoaiMH",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "dim_MonHoc"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

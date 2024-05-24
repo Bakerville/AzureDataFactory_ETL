@@ -1,9 +1,9 @@
 {
-	"name": "Ingest_Mark_to_Staging",
+	"name": "pl_ETL_to_dim_SinhVien",
 	"properties": {
 		"activities": [
 			{
-				"name": "Get Metadata1",
+				"name": "Get All Files in Info Staging",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -16,14 +16,14 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "ds_mark_files",
+						"referenceName": "ds_info_staging",
 						"type": "DatasetReference"
 					},
 					"fieldList": [
 						"childItems"
 					],
 					"storeSettings": {
-						"type": "AzureBlobStorageReadSettings",
+						"type": "AzureBlobFSReadSettings",
 						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
@@ -33,11 +33,11 @@
 				}
 			},
 			{
-				"name": "ForEach1",
+				"name": "ForEachFile",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get Metadata1",
+						"activity": "Get All Files in Info Staging",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -46,12 +46,12 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get Metadata1').output.childItems",
+						"value": "@activity('Get All Files in Info Staging').output.childItems",
 						"type": "Expression"
 					},
 					"activities": [
 						{
-							"name": "Data flow1",
+							"name": "LoadEachFiletoSinhVien",
 							"type": "ExecuteDataFlow",
 							"dependsOn": [],
 							"policy": {
@@ -64,16 +64,10 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "MarktoStaging",
+									"referenceName": "ETLtoSinhVien",
 									"type": "DataFlowReference",
-									"parameters": {
-										"MSSV": {
-											"value": "'@{item().name}'",
-											"type": "Expression"
-										}
-									},
 									"datasetParameters": {
-										"RawMarktoStaging": {
+										"SourceSinhVien": {
 											"fileName": {
 												"value": "@item().name",
 												"type": "Expression"
@@ -92,9 +86,9 @@
 				}
 			}
 		],
-		"concurrency": 5,
+		"concurrency": 20,
 		"annotations": [],
-		"lastPublishTime": "2024-05-21T07:34:11Z"
+		"lastPublishTime": "2024-05-22T07:49:04Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }

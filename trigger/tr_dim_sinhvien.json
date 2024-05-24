@@ -1,0 +1,25 @@
+{
+	"name": "tr_dim_sinhvien",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_ETL_to_dim_SinhVien",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 15,
+				"startTime": "2024-05-22T15:05:00",
+				"endTime": "2024-05-22T17:30:37",
+				"timeZone": "SE Asia Standard Time"
+			}
+		}
+	}
+}

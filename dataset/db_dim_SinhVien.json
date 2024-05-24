@@ -1,0 +1,60 @@
+{
+	"name": "db_dim_SinhVien",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_datawarehouse",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "MaSV",
+				"type": "char"
+			},
+			{
+				"name": "HoTenLot",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Ten",
+				"type": "nvarchar"
+			},
+			{
+				"name": "NgaySinh",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Tuoi",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "TenLop",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ID_NienKhoa",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ID_Khoa",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "dim_SinhVien"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

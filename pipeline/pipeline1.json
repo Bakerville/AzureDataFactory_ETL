@@ -1,0 +1,40 @@
+{
+	"name": "pipeline1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "ETLtoMonHoc",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"SourceMark": {
+								"fileName": "41.01.101.001.csv"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"concurrency": 30,
+		"annotations": [],
+		"lastPublishTime": "2024-05-23T04:22:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

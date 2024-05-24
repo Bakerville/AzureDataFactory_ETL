@@ -1,9 +1,9 @@
 {
-	"name": "Ingest_Mark_to_Staging",
+	"name": "ETL_to_fact_DiemSo",
 	"properties": {
 		"activities": [
 			{
-				"name": "Get Metadata1",
+				"name": "Get All Mark Files From Staging",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -16,14 +16,14 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "ds_mark_files",
+						"referenceName": "ds_mark_staging",
 						"type": "DatasetReference"
 					},
 					"fieldList": [
 						"childItems"
 					],
 					"storeSettings": {
-						"type": "AzureBlobStorageReadSettings",
+						"type": "AzureBlobFSReadSettings",
 						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
@@ -33,11 +33,11 @@
 				}
 			},
 			{
-				"name": "ForEach1",
+				"name": "For each file",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get Metadata1",
+						"activity": "Get All Mark Files From Staging",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -46,12 +46,12 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get Metadata1').output.childItems",
+						"value": "@activity('Get All Mark Files From Staging').output.childItems",
 						"type": "Expression"
 					},
 					"activities": [
 						{
-							"name": "Data flow1",
+							"name": "LoadtoFactMonHoc",
 							"type": "ExecuteDataFlow",
 							"dependsOn": [],
 							"policy": {
@@ -64,16 +64,10 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "MarktoStaging",
+									"referenceName": "ETltoFactMonHoc",
 									"type": "DataFlowReference",
-									"parameters": {
-										"MSSV": {
-											"value": "'@{item().name}'",
-											"type": "Expression"
-										}
-									},
 									"datasetParameters": {
-										"RawMarktoStaging": {
+										"SourceMarkdata": {
 											"fileName": {
 												"value": "@item().name",
 												"type": "Expression"
@@ -92,9 +86,9 @@
 				}
 			}
 		],
-		"concurrency": 5,
+		"concurrency": 25,
 		"annotations": [],
-		"lastPublishTime": "2024-05-21T07:34:11Z"
+		"lastPublishTime": "2024-05-23T03:21:54Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }
