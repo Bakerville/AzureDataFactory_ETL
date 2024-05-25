@@ -222,7 +222,117 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Ingest_All_Info_of_SchoolYear')]",
+			"name": "[concat(parameters('factoryName'), '/pl_etl_raw_mark_to_staging')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Files in Mark",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_mark_files",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Files in Mark",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Files in Mark').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Data flow1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "df_ETLMarktoStaging",
+											"type": "DataFlowReference",
+											"parameters": {
+												"MSSV": {
+													"value": "'@{item().name}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"RawMarktoStaging": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												},
+												"sink1": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 5,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-21T07:34:11Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_ETLMarktoStaging')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_load_all_info_of_schoolyear')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -369,116 +479,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/df_RawtoStaging')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Ingest_Mark_to_Staging')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get Metadata1",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "ds_mark_files",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobStorageReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "DelimitedTextReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ForEach1",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get Metadata1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get Metadata1').output.childItems",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Data flow1",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "df_ETLMarktoStaging",
-											"type": "DataFlowReference",
-											"parameters": {
-												"MSSV": {
-													"value": "'@{item().name}'",
-													"type": "Expression"
-												}
-											},
-											"datasetParameters": {
-												"RawMarktoStaging": {
-													"fileName": {
-														"value": "@item().name",
-														"type": "Expression"
-													}
-												},
-												"sink1": {}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								}
-							]
-						}
-					}
-				],
-				"concurrency": 5,
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-05-21T07:34:11Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/df_ETLMarktoStaging')]"
 			]
 		},
 		{
@@ -1074,340 +1074,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ETL_to_fact_DiemSo')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get All Mark Files From Staging",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "ds_mark_staging",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "DelimitedTextReadSettings"
-							}
-						}
-					},
-					{
-						"name": "For each file",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get All Mark Files From Staging",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get All Mark Files From Staging').output.childItems",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "LoadtoFactMonHoc",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "df_ETltoFactMonHoc",
-											"type": "DataFlowReference",
-											"parameters": {},
-											"datasetParameters": {
-												"SourceMarkdata": {
-													"fileName": {
-														"value": "@item().name",
-														"type": "Expression"
-													}
-												},
-												"LookupSinhVien": {},
-												"LookupMonHoc": {},
-												"sink1": {}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								}
-							]
-						}
-					}
-				],
-				"concurrency": 25,
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-05-23T03:21:54Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/df_ETltoFactMonHoc')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Ingest_All_Files_in_Faculty')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get All Folder in A Faculty",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "ds_all_folder_in_faculty",
-								"type": "DatasetReference",
-								"parameters": {
-									"facultyName": {
-										"value": "@pipeline().parameters.facultyName",
-										"type": "Expression"
-									}
-								}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobStorageReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "DelimitedTextReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ForEach1",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get All Folder in A Faculty",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get All Folder in A Faculty').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "Load all data in each Faculty",
-									"type": "ExecutePipeline",
-									"dependsOn": [],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "Ingest_All_Info_of_SchoolYear",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": false,
-										"parameters": {
-											"schoolYearFolder": {
-												"value": "@item().name",
-												"type": "Expression"
-											},
-											"facultyName": {
-												"value": "@pipeline().parameters.facultyName",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"concurrency": 8,
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"facultyName": {
-						"type": "string",
-						"defaultValue": "Khoa Công nghệ Thông tin"
-					}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-05-20T11:26:00Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/Ingest_All_Info_of_SchoolYear')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_ETL_to_DW')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get Metadata1",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "ds_info_staging",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "DelimitedTextReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ForEach1",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get Metadata1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get Metadata1').output.childItems",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Data flow1",
-									"type": "ExecuteDataFlow",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"dataflow": {
-											"referenceName": "df_ETLtoKhoa",
-											"type": "DataFlowReference",
-											"parameters": {},
-											"datasetParameters": {
-												"InfoSInhVien": {
-													"fileName": {
-														"value": "@item().name",
-														"type": "Expression"
-													}
-												},
-												"sink1": {},
-												"sink2": {}
-											},
-											"linkedServiceParameters": {
-												"InfoSInhVien": {
-													"schemaLinkedService": {
-														"fileName": {
-															"value": "@item().name",
-															"type": "Expression"
-														}
-													}
-												}
-											}
-										},
-										"staging": {},
-										"compute": {
-											"coreCount": 8,
-											"computeType": "General"
-										},
-										"traceLevel": "Fine"
-									}
-								}
-							]
-						}
-					}
-				],
-				"concurrency": 15,
-				"policy": {
-					"elapsedTimeMetric": {
-						"duration": "00:10:00"
-					}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-05-22T07:49:04Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/df_ETLtoKhoa')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/pl_ETL_to_dim_SinhVien')]",
+			"name": "[concat(parameters('factoryName'), '/pl_elt_to_dim_sinhvien')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -1514,7 +1181,232 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pl_etl_monhoc')]",
+			"name": "[concat(parameters('factoryName'), '/pl_elt_to_fact_diemso')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Mark Files From Staging",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_mark_staging",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "For each file",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Mark Files From Staging",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Mark Files From Staging').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "LoadtoFactMonHoc",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "df_ETltoFactMonHoc",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"SourceMarkdata": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												},
+												"LookupSinhVien": {},
+												"LookupMonHoc": {},
+												"sink1": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 25,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-23T03:21:54Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_ETltoFactMonHoc')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_etl_to_datawarehouse')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Info in Staging",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_info_staging",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Info in Staging",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Info in Staging').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Data flow1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "df_ETLtoKhoa",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"InfoSInhVien": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												},
+												"sink1": {},
+												"sink2": {}
+											},
+											"linkedServiceParameters": {
+												"InfoSInhVien": {
+													"schemaLinkedService": {
+														"fileName": {
+															"value": "@item().name",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 15,
+				"policy": {
+					"elapsedTimeMetric": {
+						"duration": "00:10:00"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-22T07:49:04Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_ETLtoKhoa')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_etl_to_dim_monhoc')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -1551,7 +1443,7 @@
 						}
 					},
 					{
-						"name": "ForEach1",
+						"name": "For Each File",
 						"type": "ForEach",
 						"dependsOn": [
 							{
@@ -1619,6 +1511,114 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pl_load_all_files_in_faculty')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Folder in A Faculty",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_all_folder_in_faculty",
+								"type": "DatasetReference",
+								"parameters": {
+									"facultyName": {
+										"value": "@pipeline().parameters.facultyName",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "For Each Files",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Folder in A Faculty",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Folder in A Faculty').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Load all data in each Faculty",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "pl_load_all_info_of_schoolyear",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": false,
+										"parameters": {
+											"schoolYearFolder": {
+												"value": "@item().name",
+												"type": "Expression"
+											},
+											"facultyName": {
+												"value": "@pipeline().parameters.facultyName",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 8,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"facultyName": {
+						"type": "string",
+						"defaultValue": "Khoa Công nghệ Thông tin"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-20T11:26:00Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_load_all_info_of_schoolyear')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/tr_mark')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
@@ -1628,7 +1628,7 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "Ingest_Mark_to_Staging",
+							"referenceName": "pl_etl_raw_mark_to_staging",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -1646,11 +1646,11 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/Ingest_Mark_to_Staging')]"
+				"[concat(variables('factoryId'), '/pipelines/pl_etl_raw_mark_to_staging')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Ingest_All_Files_in_Root')]",
+			"name": "[concat(parameters('factoryName'), '/pl_load_all_files_in_root_folder')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -1689,7 +1689,7 @@
 						}
 					},
 					{
-						"name": "ForEach1",
+						"name": "Fo Each Faculty",
 						"type": "ForEach",
 						"dependsOn": [
 							{
@@ -1717,7 +1717,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "Ingest_All_Files_in_Faculty",
+											"referenceName": "pl_load_all_files_in_faculty",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": false,
@@ -1741,7 +1741,7 @@
 				"lastPublishTime": "2024-05-20T11:26:01Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/Ingest_All_Files_in_Faculty')]"
+				"[concat(variables('factoryId'), '/pipelines/pl_load_all_files_in_faculty')]"
 			]
 		},
 		{
@@ -1754,7 +1754,7 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "pl_etl_monhoc",
+							"referenceName": "pl_etl_to_dim_monhoc",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -1772,7 +1772,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_etl_monhoc')]"
+				"[concat(variables('factoryId'), '/pipelines/pl_etl_to_dim_monhoc')]"
 			]
 		},
 		{
@@ -1785,7 +1785,7 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "pl_ETL_to_dim_SinhVien",
+							"referenceName": "pl_elt_to_dim_sinhvien",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -1803,7 +1803,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_ETL_to_dim_SinhVien')]"
+				"[concat(variables('factoryId'), '/pipelines/pl_elt_to_dim_sinhvien')]"
 			]
 		},
 		{
@@ -1816,7 +1816,7 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "ETL_to_fact_DiemSo",
+							"referenceName": "pl_elt_to_fact_diemso",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -1834,7 +1834,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/ETL_to_fact_DiemSo')]"
+				"[concat(variables('factoryId'), '/pipelines/pl_elt_to_fact_diemso')]"
 			]
 		},
 		{
@@ -1847,7 +1847,7 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "pl_ETL_to_DW",
+							"referenceName": "pl_etl_to_datawarehouse",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -1864,7 +1864,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_ETL_to_DW')]"
+				"[concat(variables('factoryId'), '/pipelines/pl_etl_to_datawarehouse')]"
 			]
 		}
 	]
