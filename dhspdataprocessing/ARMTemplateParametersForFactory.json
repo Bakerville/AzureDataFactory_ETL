@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "dhspdataprocessing"
+		},
+		"ls_datalake_accountKey": {
+			"value": ""
+		},
+		"ls_raw_data_connectionString": {
+			"value": ""
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"value": "https://dhspdatawarehouse.vault.azure.net/"
+		},
+		"ls_datalake_properties_typeProperties_url": {
+			"value": "https://dhspdatalake.dfs.core.windows.net/"
+		},
+		"ls_datawarehouse_properties_typeProperties_connectionString_secretName": {
+			"value": "admin1"
+		}
+	}
+}

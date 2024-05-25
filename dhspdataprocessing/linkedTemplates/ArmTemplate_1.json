@@ -1,0 +1,1871 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "dhspdataprocessing"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_fact_mark')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_datawarehouse",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ID_SinhVien",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ID_HocPhan",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Diem",
+						"type": "float",
+						"precision": 15
+					},
+					{
+						"name": "DiemChu",
+						"type": "char"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "fact_DiemSo"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_ETLMarktoStaging')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_raw_mark",
+								"type": "DatasetReference"
+							},
+							"name": "RawMarktoStaging"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_mark_staging",
+								"type": "DatasetReference"
+							},
+							"name": "sink1",
+							"rejectedDataLinkedService": {
+								"referenceName": "ls_datalake",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedColumn1"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     MSSV as string",
+						"}",
+						"source(output(",
+						"          STT as string,",
+						"          {Mã học phần} as string,",
+						"          {Tên học phần} as string,",
+						"          {Tín chỉ} as string,",
+						"          {Loại môn học} as string,",
+						"          {Điểm} as string,",
+						"          {Điểm chữ} as string,",
+						"          {Kết quả} as string,",
+						"          {Chi tiết} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> RawMarktoStaging",
+						"RawMarktoStaging derive(MSSV = replace($MSSV, '.csv', '')) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['$MSSV'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_RawtoStaging')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_raw_info_student",
+								"type": "DatasetReference"
+							},
+							"name": "Rawdata"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_info_staging",
+								"type": "DatasetReference"
+							},
+							"name": "Datalake",
+							"rejectedDataLinkedService": {
+								"referenceName": "ls_datalake",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddDimensionalAttribute"
+						},
+						{
+							"name": "SelectNeededColumn"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     facultyName as string,",
+						"     schoolYear as string,",
+						"     sinkFileName as string,",
+						"     className as string",
+						"}",
+						"source(output(",
+						"          Prop_0 as string,",
+						"          STT as string,",
+						"          {Mã sinh viên} as string,",
+						"          {Họ lót} as string,",
+						"          {Tên} as string,",
+						"          {Ngày sinh} as string,",
+						"          {Xem điểm} as string,",
+						"          {Lịch học} as string,",
+						"          {Thông tin} as string,",
+						"          {Lịch thi} as string,",
+						"          {Học phí} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Rawdata",
+						"Rawdata derive({Niên khoá} = $schoolYear,",
+						"          Khoa = $facultyName,",
+						"          {Ngày tạo} = currentDate(),",
+						"          {Tên lớp} = split($className, '.')[1]) ~> AddDimensionalAttribute",
+						"AddDimensionalAttribute select(skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectNeededColumn",
+						"SelectNeededColumn sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Prop_0 as string,",
+						"          STT as string,",
+						"          {Mã sinh viên} as string,",
+						"          {Họ lót} as string,",
+						"          {Tên} as string,",
+						"          {Ngày sinh} as string,",
+						"          {Xem điểm} as string,",
+						"          {Lịch học} as string,",
+						"          {Thông tin} as string,",
+						"          {Lịch thi} as string,",
+						"          {Học phí} as string,",
+						"          {_c0} as string,",
+						"          {Niên khoá} as string,",
+						"          Khoa as string,",
+						"          {Ngày tạo} as string,",
+						"          {Tên lớp} as string",
+						"     ),",
+						"     partitionFileNames:[(concat($facultyName,'_', $schoolYear, '_', $sinkFileName))],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> Datalake"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Ingest_All_Info_of_SchoolYear')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Files in SchoolYearFolder",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_all_info_in_schoolyear",
+								"type": "DatasetReference",
+								"parameters": {
+									"schoolYear": {
+										"value": "@pipeline().parameters.schoolYearFolder",
+										"type": "Expression"
+									},
+									"facultyName": {
+										"value": "@pipeline().parameters.facultyName",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "For Each Filename",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Files in SchoolYearFolder",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Files in SchoolYearFolder').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "IngestData",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "df_RawtoStaging",
+											"type": "DataFlowReference",
+											"parameters": {
+												"facultyName": {
+													"value": "'@{pipeline().parameters.facultyName}'",
+													"type": "Expression"
+												},
+												"schoolYear": {
+													"value": "'@{pipeline().parameters.schoolYearFolder}'",
+													"type": "Expression"
+												},
+												"sinkFileName": {
+													"value": "'@{item().name}'",
+													"type": "Expression"
+												},
+												"className": {
+													"value": "'@{item().name}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"Rawdata": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													},
+													"schoolYearFolder": {
+														"value": "@pipeline().parameters.schoolYearFolder",
+														"type": "Expression"
+													},
+													"facultyName": {
+														"value": "@pipeline().parameters.facultyName",
+														"type": "Expression"
+													}
+												},
+												"Datalake": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 16,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine",
+										"runConcurrently": true
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 10,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"schoolYearFolder": {
+						"type": "string",
+						"defaultValue": "Khóa 41 (2015)"
+					},
+					"facultyName": {
+						"type": "string",
+						"defaultValue": "Khoa Sinh học"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-20T11:25:58Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_RawtoStaging')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Ingest_Mark_to_Staging')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_mark_files",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata1').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Data flow1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "df_ETLMarktoStaging",
+											"type": "DataFlowReference",
+											"parameters": {
+												"MSSV": {
+													"value": "'@{item().name}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"RawMarktoStaging": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												},
+												"sink1": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 5,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-21T07:34:11Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_ETLMarktoStaging')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_ETLtoKhoa')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_staging_khoa",
+								"type": "DatasetReference"
+							},
+							"name": "InfoSInhVien"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "db_subdim_nienkhoa",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						},
+						{
+							"dataset": {
+								"referenceName": "db_sink_khoa",
+								"type": "DatasetReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterFirstRow"
+						},
+						{
+							"name": "SelectForKhoa"
+						},
+						{
+							"name": "SelectForNienKhoa"
+						},
+						{
+							"name": "AddNamColumn"
+						},
+						{
+							"name": "aggregate1"
+						},
+						{
+							"name": "aggregate2"
+						},
+						{
+							"name": "AlterRow1"
+						},
+						{
+							"name": "AlterRow2"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Prop_0 as string,",
+						"          STT as string,",
+						"          {Mã sinh viên} as string,",
+						"          {Họ lót} as string,",
+						"          {Tên} as string,",
+						"          {Ngày sinh} as string,",
+						"          {Xem điểm} as string,",
+						"          {Lịch học} as string,",
+						"          {Thông tin} as string,",
+						"          {Lịch thi} as string,",
+						"          {Học phí} as string,",
+						"          {_c0} as string,",
+						"          {Niên khoá} as string,",
+						"          Khoa as string,",
+						"          {Ngày tạo} as string,",
+						"          {Tên lớp} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> InfoSInhVien",
+						"InfoSInhVien filter(STT == '1') ~> FilterFirstRow",
+						"FilterFirstRow select(mapColumn(",
+						"          STT,",
+						"          Khoa,",
+						"          {Ngày tạo}",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectForKhoa",
+						"FilterFirstRow select(mapColumn(",
+						"          STT,",
+						"          {Niên khoá}",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectForNienKhoa",
+						"SelectForNienKhoa derive({Năm} = toInteger(substring({Niên khoá},5,4)),",
+						"          {Khoá} = substring({Niên khoá},1,7)) ~> AddNamColumn",
+						"AddNamColumn aggregate(groupBy({Niên khoá},",
+						"          {Khoá}),",
+						"     {Năm} = first({Năm})) ~> aggregate1",
+						"SelectForKhoa aggregate(groupBy(Khoa),",
+						"     db_Khoa = first(Khoa)) ~> aggregate2",
+						"aggregate2 alterRow(upsertIf(true())) ~> AlterRow1",
+						"aggregate1 alterRow(upsertIf(true())) ~> AlterRow2",
+						"AlterRow2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ID as integer,",
+						"          NienKhoa as string,",
+						"          NamHoc as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['NienKhoa'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'allErrors',",
+						"     transactionCommit: 'batch',",
+						"     reportSuccessOnError: false,",
+						"     mapColumn(",
+						"          NienKhoa = {Khoá},",
+						"          NamHoc = {Năm}",
+						"     )) ~> sink1",
+						"AlterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ID as integer,",
+						"          TenKhoa as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['TenKhoa'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          TenKhoa = Khoa",
+						"     )) ~> sink2"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_ETLtoMonHoc')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_mark_data_staging",
+								"type": "DatasetReference"
+							},
+							"name": "SourceMark"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_dim_monhoc",
+								"type": "DatasetReference"
+							},
+							"name": "dimMonHoc"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SelectForMonHoc"
+						},
+						{
+							"name": "alterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          STT as string,",
+						"          {Mã học phần} as string,",
+						"          {Tên học phần} as string,",
+						"          {Tín chỉ} as integer,",
+						"          {Loại môn học} as string,",
+						"          {Điểm} as float,",
+						"          {Điểm chữ} as string,",
+						"          {Kết quả} as string,",
+						"          {Chi tiết} as string,",
+						"          MSSV as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> SourceMark",
+						"SourceMark select(mapColumn(",
+						"          {Mã học phần},",
+						"          {Tên học phần},",
+						"          {Tín chỉ},",
+						"          {Loại môn học}",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectForMonHoc",
+						"SelectForMonHoc alterRow(upsertIf(true())) ~> alterRow1",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ID as integer,",
+						"          MaHP as string,",
+						"          TenHP as string,",
+						"          TinChi as integer,",
+						"          LoaiMH as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['MaHP'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          MaHP = {Mã học phần},",
+						"          TenHP = {Tên học phần},",
+						"          TinChi = {Tín chỉ},",
+						"          LoaiMH = {Loại môn học}",
+						"     )) ~> dimMonHoc"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_ETLtoSinhVien')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_staging_khoa",
+								"type": "DatasetReference"
+							},
+							"name": "SourceSinhVien"
+						},
+						{
+							"dataset": {
+								"referenceName": "db_sink_khoa",
+								"type": "DatasetReference"
+							},
+							"name": "LookupKhoaSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "db_subdim_nienkhoa",
+								"type": "DatasetReference"
+							},
+							"name": "LookupIDNienKhoa"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "db_dim_sinhvien",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						},
+						{
+							"name": "AddNamKhoaColumn"
+						},
+						{
+							"name": "LookupIDKhoa"
+						},
+						{
+							"name": "select2"
+						},
+						{
+							"name": "LookupNienKhoa"
+						},
+						{
+							"name": "select3"
+						},
+						{
+							"name": "alterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          Prop_0 as string,",
+						"          STT as integer,",
+						"          {Mã sinh viên} as string,",
+						"          {Họ lót} as string,",
+						"          {Tên} as string,",
+						"          {Ngày sinh} as timestamp 'dd/MM/yyyy',",
+						"          {Xem điểm} as string,",
+						"          {Lịch học} as string,",
+						"          {Thông tin} as string,",
+						"          {Lịch thi} as string,",
+						"          {Học phí} as string,",
+						"          {_c0} as string,",
+						"          {Niên khoá} as string,",
+						"          Khoa as string,",
+						"          {Ngày tạo} as string,",
+						"          {Tên lớp} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> SourceSinhVien",
+						"source(output(",
+						"          ID as integer,",
+						"          TenKhoa as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> LookupKhoaSource",
+						"source(output(",
+						"          ID as integer,",
+						"          NienKhoa as string,",
+						"          NamHoc as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> LookupIDNienKhoa",
+						"SourceSinhVien select(mapColumn(",
+						"          STT,",
+						"          {Mã sinh viên},",
+						"          {Họ lót},",
+						"          {Tên},",
+						"          {Ngày sinh},",
+						"          {Niên khoá},",
+						"          Khoa,",
+						"          {Tên lớp}",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 derive({Năm Khoá} = substring({Niên khoá},1,7),",
+						"          {Tuổi} = year(currentDate()) - year({Ngày sinh})) ~> AddNamKhoaColumn",
+						"AddNamKhoaColumn, LookupKhoaSource lookup(Khoa == TenKhoa,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> LookupIDKhoa",
+						"LookupIDKhoa select(mapColumn(",
+						"          {Mã sinh viên},",
+						"          {Họ lót},",
+						"          {Tên},",
+						"          {Ngày sinh},",
+						"          {Niên khoá},",
+						"          Khoa,",
+						"          {Tên lớp},",
+						"          {Năm Khoá},",
+						"          ID_Khoa = ID,",
+						"          {Tuổi}",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select2",
+						"select2, LookupIDNienKhoa lookup({Năm Khoá} == NienKhoa,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> LookupNienKhoa",
+						"LookupNienKhoa select(mapColumn(",
+						"          {Mã sinh viên},",
+						"          {Họ lót},",
+						"          {Tên},",
+						"          {Ngày sinh},",
+						"          {Tên lớp},",
+						"          ID_Khoa,",
+						"          ID_NienKhoa = ID,",
+						"          {Tuổi}",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select3",
+						"select3 alterRow(upsertIf(true())) ~> alterRow1",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ID as integer,",
+						"          MaSV as string,",
+						"          HoTenLot as string,",
+						"          Ten as string,",
+						"          NgaySinh as timestamp,",
+						"          Tuoi as integer,",
+						"          TenLop as string,",
+						"          ID_NienKhoa as integer,",
+						"          ID_Khoa as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:false,",
+						"     upsertable:true,",
+						"     keys:['MaSV'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          MaSV = {Mã sinh viên},",
+						"          HoTenLot = {Họ lót},",
+						"          Ten = {Tên},",
+						"          NgaySinh = {Ngày sinh},",
+						"          Tuoi = {Tuổi},",
+						"          TenLop = {Tên lớp},",
+						"          ID_NienKhoa,",
+						"          ID_Khoa",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_ETltoFactMonHoc')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_mark_data_staging",
+								"type": "DatasetReference"
+							},
+							"name": "SourceMarkdata"
+						},
+						{
+							"dataset": {
+								"referenceName": "db_dim_sinhvien",
+								"type": "DatasetReference"
+							},
+							"name": "LookupSinhVien"
+						},
+						{
+							"dataset": {
+								"referenceName": "ds_dim_monhoc",
+								"type": "DatasetReference"
+							},
+							"name": "LookupMonHoc"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_fact_mark",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SelectForFact"
+						},
+						{
+							"name": "LookupdimSV"
+						},
+						{
+							"name": "select1"
+						},
+						{
+							"name": "LookupdimMonHoc"
+						},
+						{
+							"name": "select2"
+						},
+						{
+							"name": "filter1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          STT as string,",
+						"          {Mã học phần} as string,",
+						"          {Tên học phần} as string,",
+						"          {Tín chỉ} as string,",
+						"          {Loại môn học} as string,",
+						"          {Điểm} as double,",
+						"          {Điểm chữ} as string,",
+						"          {Kết quả} as string,",
+						"          {Chi tiết} as string,",
+						"          MSSV as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> SourceMarkdata",
+						"source(output(",
+						"          ID as integer,",
+						"          MaSV as string,",
+						"          HoTenLot as string,",
+						"          Ten as string,",
+						"          NgaySinh as timestamp,",
+						"          Tuoi as integer,",
+						"          TenLop as string,",
+						"          ID_NienKhoa as integer,",
+						"          ID_Khoa as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> LookupSinhVien",
+						"source(output(",
+						"          ID as integer,",
+						"          MaHP as string,",
+						"          TenHP as string,",
+						"          TinChi as integer,",
+						"          LoaiMH as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> LookupMonHoc",
+						"SourceMarkdata select(mapColumn(",
+						"          {Mã học phần},",
+						"          {Điểm},",
+						"          {Điểm chữ},",
+						"          {Kết quả},",
+						"          MSSV",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectForFact",
+						"SelectForFact, LookupSinhVien lookup(trim(MSSV) == trim(MaSV),",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> LookupdimSV",
+						"LookupdimSV select(mapColumn(",
+						"          {Mã học phần},",
+						"          {Điểm},",
+						"          {Điểm chữ},",
+						"          {Kết quả},",
+						"          MSSV,",
+						"          ID_SinhVien = ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1, LookupMonHoc lookup(trim({Mã học phần}) == trim(MaHP),",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> LookupdimMonHoc",
+						"LookupdimMonHoc select(mapColumn(",
+						"          {Mã học phần},",
+						"          {Điểm},",
+						"          {Điểm chữ},",
+						"          {Kết quả},",
+						"          MSSV,",
+						"          ID_SinhVien,",
+						"          ID_MonHoc = ID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select2",
+						"select2 filter((!isNull(ID_SinhVien)) && (!isNull(ID_MonHoc))) ~> filter1",
+						"filter1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ID as integer,",
+						"          ID_SinhVien as integer,",
+						"          ID_HocPhan as integer,",
+						"          Diem as double,",
+						"          DiemChu as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ID_SinhVien,",
+						"          ID_HocPhan = ID_MonHoc,",
+						"          Diem = {Điểm},",
+						"          DiemChu = {Điểm chữ}",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_fact_mark')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ETL_to_fact_DiemSo')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Mark Files From Staging",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_mark_staging",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "For each file",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Mark Files From Staging",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Mark Files From Staging').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "LoadtoFactMonHoc",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "df_ETltoFactMonHoc",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"SourceMarkdata": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												},
+												"LookupSinhVien": {},
+												"LookupMonHoc": {},
+												"sink1": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 25,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-23T03:21:54Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_ETltoFactMonHoc')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Ingest_All_Files_in_Faculty')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Folder in A Faculty",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_all_folder_in_faculty",
+								"type": "DatasetReference",
+								"parameters": {
+									"facultyName": {
+										"value": "@pipeline().parameters.facultyName",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Folder in A Faculty",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Folder in A Faculty').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Load all data in each Faculty",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Ingest_All_Info_of_SchoolYear",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": false,
+										"parameters": {
+											"schoolYearFolder": {
+												"value": "@item().name",
+												"type": "Expression"
+											},
+											"facultyName": {
+												"value": "@pipeline().parameters.facultyName",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 8,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"facultyName": {
+						"type": "string",
+						"defaultValue": "Khoa Công nghệ Thông tin"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-20T11:26:00Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Ingest_All_Info_of_SchoolYear')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_ETL_to_DW')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_info_staging",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata1').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Data flow1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "df_ETLtoKhoa",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"InfoSInhVien": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												},
+												"sink1": {},
+												"sink2": {}
+											},
+											"linkedServiceParameters": {
+												"InfoSInhVien": {
+													"schemaLinkedService": {
+														"fileName": {
+															"value": "@item().name",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 15,
+				"policy": {
+					"elapsedTimeMetric": {
+						"duration": "00:10:00"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-22T07:49:04Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_ETLtoKhoa')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_ETL_to_dim_SinhVien')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Files in Info Staging",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_info_staging",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEachFile",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Files in Info Staging",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Files in Info Staging').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "LoadEachFiletoSinhVien",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "df_ETLtoSinhVien",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"SourceSinhVien": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												},
+												"LookupKhoaSource": {},
+												"LookupIDNienKhoa": {},
+												"sink1": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 20,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-22T07:49:04Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_ETLtoSinhVien')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_etl_monhoc')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Mark Filename",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_mark_staging",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Mark Filename",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Mark Filename').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "LoadtoMonHoc",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "df_ETLtoMonHoc",
+											"type": "DataFlowReference",
+											"parameters": {},
+											"datasetParameters": {
+												"SourceMark": {
+													"fileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												},
+												"dimMonHoc": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 25,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-23T03:21:54Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_ETLtoMonHoc')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tr_mark')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "Ingest_Mark_to_Staging",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 30,
+						"startTime": "2024-05-21T09:30:00",
+						"endTime": "2024-05-21T12:02:54",
+						"timeZone": "SE Asia Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Ingest_Mark_to_Staging')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Ingest_All_Files_in_Root')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get All Faculty",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "ds_root_folder",
+								"type": "DatasetReference",
+								"parameters": {
+									"rootFolder": "info"
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get All Faculty",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get All Faculty').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Execute Pipeline1",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Ingest_All_Files_in_Faculty",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": false,
+										"parameters": {
+											"facultyName": {
+												"value": "@item().name",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"concurrency": 8,
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-05-20T11:26:01Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Ingest_All_Files_in_Faculty')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tr_dim_monhoc')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_etl_monhoc",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 20,
+						"startTime": "2024-05-23T11:57:00",
+						"endTime": "2024-05-23T12:33:00",
+						"timeZone": "SE Asia Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_etl_monhoc')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tr_dim_sinhvien')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_ETL_to_dim_SinhVien",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 15,
+						"startTime": "2024-05-22T15:05:00",
+						"endTime": "2024-05-22T17:30:37",
+						"timeZone": "SE Asia Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_ETL_to_dim_SinhVien')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tr_fact_diemso')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "ETL_to_fact_DiemSo",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 20,
+						"startTime": "2024-05-23T12:06:00",
+						"endTime": "2024-05-23T13:21:00",
+						"timeZone": "SE Asia Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/ETL_to_fact_DiemSo')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tr_staging_to_dw')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_ETL_to_DW",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 10,
+						"startTime": "2024-05-22T14:00:00",
+						"timeZone": "SE Asia Standard Time"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_ETL_to_DW')]"
+			]
+		}
+	]
+}
