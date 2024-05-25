@@ -1,5 +1,5 @@
 {
-	"name": "pl_etl_monhoc",
+	"name": "pl_etl_to_dim_monhoc",
 	"properties": {
 		"activities": [
 			{
@@ -33,7 +33,7 @@
 				}
 			},
 			{
-				"name": "ForEach1",
+				"name": "For Each File",
 				"type": "ForEach",
 				"dependsOn": [
 					{

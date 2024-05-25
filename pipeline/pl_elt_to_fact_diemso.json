@@ -1,5 +1,5 @@
 {
-	"name": "ETL_to_fact_DiemSo",
+	"name": "pl_elt_to_fact_diemso",
 	"properties": {
 		"activities": [
 			{

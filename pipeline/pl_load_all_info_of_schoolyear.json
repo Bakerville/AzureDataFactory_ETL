@@ -1,5 +1,5 @@
 {
-	"name": "Ingest_All_Info_of_SchoolYear",
+	"name": "pl_load_all_info_of_schoolyear",
 	"properties": {
 		"activities": [
 			{

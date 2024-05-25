@@ -6,7 +6,7 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "ETL_to_fact_DiemSo",
+					"referenceName": "pl_elt_to_fact_diemso",
 					"type": "PipelineReference"
 				}
 			}

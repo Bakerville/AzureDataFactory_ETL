@@ -1,9 +1,9 @@
 {
-	"name": "Ingest_Mark_to_Staging",
+	"name": "pl_etl_raw_mark_to_staging",
 	"properties": {
 		"activities": [
 			{
-				"name": "Get Metadata1",
+				"name": "Get All Files in Mark",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -37,7 +37,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get Metadata1",
+						"activity": "Get All Files in Mark",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -46,7 +46,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get Metadata1').output.childItems",
+						"value": "@activity('Get All Files in Mark').output.childItems",
 						"type": "Expression"
 					},
 					"activities": [

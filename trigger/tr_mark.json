@@ -6,7 +6,7 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "Ingest_Mark_to_Staging",
+					"referenceName": "pl_etl_raw_mark_to_staging",
 					"type": "PipelineReference"
 				}
 			}

@@ -6,7 +6,7 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "pl_ETL_to_DW",
+					"referenceName": "pl_etl_to_datawarehouse",
 					"type": "PipelineReference"
 				}
 			}

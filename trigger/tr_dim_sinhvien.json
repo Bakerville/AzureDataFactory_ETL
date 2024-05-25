@@ -6,7 +6,7 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "pl_ETL_to_dim_SinhVien",
+					"referenceName": "pl_elt_to_dim_sinhvien",
 					"type": "PipelineReference"
 				}
 			}

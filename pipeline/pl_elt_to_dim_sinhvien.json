@@ -1,5 +1,5 @@
 {
-	"name": "pl_ETL_to_dim_SinhVien",
+	"name": "pl_elt_to_dim_sinhvien",
 	"properties": {
 		"activities": [
 			{

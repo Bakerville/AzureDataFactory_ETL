@@ -1,5 +1,5 @@
 {
-	"name": "Ingest_All_Files_in_Faculty",
+	"name": "pl_load_all_files_in_faculty",
 	"properties": {
 		"activities": [
 			{
@@ -39,7 +39,7 @@
 				}
 			},
 			{
-				"name": "ForEach1",
+				"name": "For Each Files",
 				"type": "ForEach",
 				"dependsOn": [
 					{
@@ -67,7 +67,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Ingest_All_Info_of_SchoolYear",
+									"referenceName": "pl_load_all_info_of_schoolyear",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": false,
