@@ -1,5 +1,5 @@
 {
-	"name": "ds_raw_info",
+	"name": "ds_raw_info_student",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_raw_data",

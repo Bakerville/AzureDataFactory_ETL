@@ -1,12 +1,12 @@
 {
-	"name": "RawtoStaging",
+	"name": "df_RawtoStaging",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "ds_raw_info",
+						"referenceName": "ds_raw_info_student",
 						"type": "DatasetReference"
 					},
 					"name": "Rawdata"

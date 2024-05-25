@@ -1,5 +1,5 @@
 {
-	"name": "ETltoFactMonHoc",
+	"name": "df_ETltoFactMonHoc",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -13,7 +13,7 @@
 				},
 				{
 					"dataset": {
-						"referenceName": "db_dim_SinhVien",
+						"referenceName": "db_dim_sinhvien",
 						"type": "DatasetReference"
 					},
 					"name": "LookupSinhVien"

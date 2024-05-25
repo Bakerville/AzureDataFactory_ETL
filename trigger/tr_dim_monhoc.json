@@ -6,7 +6,7 @@
 		"pipelines": [
 			{
 				"pipelineReference": {
-					"referenceName": "ETL_MonHoc",
+					"referenceName": "pl_etl_monhoc",
 					"type": "PipelineReference"
 				}
 			}

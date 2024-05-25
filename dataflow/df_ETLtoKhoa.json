@@ -1,5 +1,5 @@
 {
-	"name": "IntegrationtoKhoa",
+	"name": "df_ETLtoKhoa",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -15,7 +15,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "db_sink_NienKhoa",
+						"referenceName": "db_subdim_nienkhoa",
 						"type": "DatasetReference"
 					},
 					"name": "sink1"

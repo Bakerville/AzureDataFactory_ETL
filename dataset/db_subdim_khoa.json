@@ -1,5 +1,5 @@
 {
-	"name": "db_hcmue",
+	"name": "db_subdim_khoa",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_datawarehouse",

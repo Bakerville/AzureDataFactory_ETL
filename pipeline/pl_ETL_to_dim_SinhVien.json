@@ -64,7 +64,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "ETLtoSinhVien",
+									"referenceName": "df_ETLtoSinhVien",
 									"type": "DataFlowReference",
 									"datasetParameters": {
 										"SourceSinhVien": {

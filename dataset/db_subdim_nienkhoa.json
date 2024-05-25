@@ -1,5 +1,5 @@
 {
-	"name": "db_sink_NienKhoa",
+	"name": "db_subdim_nienkhoa",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_datawarehouse",

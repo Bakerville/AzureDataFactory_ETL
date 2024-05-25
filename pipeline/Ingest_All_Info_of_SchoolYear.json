@@ -74,7 +74,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "RawtoStaging",
+									"referenceName": "df_RawtoStaging",
 									"type": "DataFlowReference",
 									"parameters": {
 										"facultyName": {

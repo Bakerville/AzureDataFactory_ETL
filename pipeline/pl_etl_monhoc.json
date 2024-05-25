@@ -1,9 +1,9 @@
 {
-	"name": "ETL_MonHoc",
+	"name": "pl_etl_monhoc",
 	"properties": {
 		"activities": [
 			{
-				"name": "Get Metadata1",
+				"name": "Get All Mark Filename",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -37,7 +37,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Get Metadata1",
+						"activity": "Get All Mark Filename",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -46,7 +46,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get Metadata1').output.childItems",
+						"value": "@activity('Get All Mark Filename').output.childItems",
 						"type": "Expression"
 					},
 					"activities": [
@@ -64,7 +64,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "ETLtoMonHoc",
+									"referenceName": "df_ETLtoMonHoc",
 									"type": "DataFlowReference",
 									"datasetParameters": {
 										"SourceMark": {

@@ -1,5 +1,5 @@
 {
-	"name": "ETLtoSinhVien",
+	"name": "df_ETLtoSinhVien",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -20,7 +20,7 @@
 				},
 				{
 					"dataset": {
-						"referenceName": "db_sink_NienKhoa",
+						"referenceName": "db_subdim_nienkhoa",
 						"type": "DatasetReference"
 					},
 					"name": "LookupIDNienKhoa"
@@ -29,7 +29,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "db_dim_SinhVien",
+						"referenceName": "db_dim_sinhvien",
 						"type": "DatasetReference"
 					},
 					"name": "sink1"

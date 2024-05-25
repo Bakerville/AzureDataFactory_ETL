@@ -64,7 +64,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "MarktoStaging",
+									"referenceName": "df_ETLMarktoStaging",
 									"type": "DataFlowReference",
 									"parameters": {
 										"MSSV": {

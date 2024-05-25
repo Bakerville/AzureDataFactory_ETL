@@ -1,5 +1,5 @@
 {
-	"name": "db_dim_SinhVien",
+	"name": "db_dim_sinhvien",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_datawarehouse",

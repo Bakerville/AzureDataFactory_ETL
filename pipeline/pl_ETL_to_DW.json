@@ -64,7 +64,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "IntegrationtoKhoa",
+									"referenceName": "df_ETLtoKhoa",
 									"type": "DataFlowReference",
 									"datasetParameters": {
 										"InfoSInhVien": {
