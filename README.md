@@ -7,7 +7,7 @@ There is a data of student in a college (so, i set up private for this repositor
 
 In this project, it requires modeling following snowflake schema. When you slice data along SchoolYear dimension, Faculty dimension, the dashboard will show you the infomation and marks of a student.
 
-<img title="a title" alt="Alt text" src="/images/Data processing.png">
+<img title="a title" alt="Alt text" src="/images/Data Processing.png">
 
 
 **2. What I will do in this project?**
