@@ -32,7 +32,7 @@
 						"referenceName": "db_dim_sinhvien",
 						"type": "DatasetReference"
 					},
-					"name": "sink1"
+					"name": "SinhVienDimension"
 				}
 			],
 			"transformations": [
@@ -177,7 +177,7 @@
 				"          TenLop = {Tên lớp},",
 				"          ID_NienKhoa,",
 				"          ID_Khoa",
-				"     )) ~> sink1"
+				"     )) ~> SinhVienDimension"
 			]
 		}
 	}
