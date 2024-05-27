@@ -2,7 +2,7 @@
 
 This is my personal project for learning data warehouse architecture and Azure Cloud Platform. Incidentally, I had this data from a colleague. Then, I thought that I could use these data to take a hand-on project to get more knowledge on how to operate a data system
 
-**1. Requiments**
+**1. REQUIREMENTS**
 
 There is a data of student in a college (so, i set up private for this repository). I need to load these data into a server for long-term storing and support analysis automaticly.
 
@@ -12,6 +12,7 @@ In this project, it requires modeling following snowflake schema. When you slice
 
 
 **2. What I will do in this project?**
+
 My system follows 3-layers architecture, which includes 3 data layers: **Staging**, **Data Warehouse**, **Data Mart**. Data from raw datastore is extracted, loaded and tranforms through layers. In each layer, data is stored in differenct types with different schemas.
 
 In the beginning of data processing, I faced to a problem. The data in each files is missed 3 attribute faculty, schoolyear and class name. These two attributes are include in the file path **/faculty/school_year/class_name.csv/**. When loading data from raw to staging, I have to extract these information and add them as 3 derived column.
