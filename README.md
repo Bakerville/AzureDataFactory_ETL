@@ -81,7 +81,7 @@ There are 2 mode to see data: Letter mode and Number mode made of a DAX measure
 
 When the data produced in business processes grows promptly day by day, Data Warehouse Architecture is essential to reduce the size of storage. Appently, The data warehouse that operatios data in many dimensions and facts provides fast query.
 
-In data warehouse, the surrogate key (I used INDENTITY(1,1) for this key in database) is used as foreign keys instead of natural key. I think the reason that when you quries data, The tables will be joint and filter with conditions, if you use surrogate key as integer give a fast operation than nature key (string type). 
+In data warehouse, the surrogate key (I used INDENTITY(1,1) for this key in database) is used as foreign keys instead of natural key. I think the reason that when you quries data, The tables will be joint and filter with conditions, using surrogate key as integer gives fast operation than nature key (string type). 
 
 
 
