@@ -15,7 +15,7 @@ In this project, it requires modeling following snowflake schema. When you slice
 
 My system follows 3-layers architecture, which includes 3 data layers: **Staging**, **Data Warehouse**, **Data Mart**. Data from raw datastore is extracted, loaded and tranforms through layers. In each layer, data is stored in differenct types with different schemas.
 
-In the beginning of data processing, I faced to a problem. The data in each files is missed 3 attribute faculty, schoolyear and class name. These two attributes are include in the file path **/faculty/school_year/class_name.csv/**. When loading data from raw to staging, I have to extract these information and add them as 3 derived column.
+In the beginning of data processing, I faced to a problem. The data in each files is missed 3 attribute faculty, schoolyear and class name. These two attributes are include in the file path **/faculty/school_year/class_name.csv/**. When loading data from raw to staging, I have to extract these information and add them as 3 derived column. 
 
 <img title="adf" alt="Alt text" src="/images/Raw Data Directory.png">
 
@@ -54,6 +54,8 @@ The data is tranformed and loaded following the order: subdim -> dim -> fact. Th
 <p>
         <em style="text-align: center;">Data Flow ETL from Staging to SinhVien Dimension</em>
 </p>
+
+The below dataflow is used to ETL one file to destination. In the main pipeline, I added a ForEach componet to loop over all filename variables. Then, A trigger is set to operate the pipeline automaticly. 
 
 Last step of entire processing, Data from Azure SQLserver is loaded to Power BI. I wrote some DAX measure to display all data.
 
