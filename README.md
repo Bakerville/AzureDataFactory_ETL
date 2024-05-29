@@ -1,6 +1,6 @@
 # ETL WITH DATA FACTORY
 
-This is my personal project for learning data warehouse architecture and Azure Cloud Platform. Incidentally, I had this data from a colleague. Then, I thought that I could use these data to take a hand-on project to get more knowledge on how to operate a data system
+This is my personal project for learning data warehouse architecture and Azure Cloud Platform. Incidentally, I had this data from a colleague. Then, I thought that I could use these data to take a hand-on project to get more knowledge on how to operate a data system.
 
 **1. REQUIREMENTS**
 
@@ -41,14 +41,14 @@ In the beginning of data processing, I faced to a problem. The data in each file
         <em style="text-align: center;">Dataflow ETL from Raw to Staging</em>
 </p>
 
-**The second step** is ETL from Staging to Datawarehouse (Azure SQL Server). The design of data warehouse follows snowflake schema
+**The second step** is ETL from Staging to Datawarehouse (Azure SQL Server). The design of data warehouse follows snowflake schema,
 
 <img title="adf" alt="Alt text" src="/images/DW diagram.jpg">
 <p>
         <em style="text-align: center;">Data Modeling</em>
 </p>
 
-The data is tranformed and loaded following the order: subdim -> dim -> fact. The fact is the mark of all students.
+The data is tranformed and loaded following the order: <code> subdim -> dim -> fact </code>. The fact is the mark of all students.
 
 <img title="adf" alt="Alt text" src="/images/Data Flow ETL from Staging to dim_sinhvien.png">
 <p>
