@@ -48,7 +48,7 @@ In the beginning of data processing, I faced to a problem. The data in each file
         <em style="text-align: center;">Data Modeling</em>
 </p>
 
-The data is tranformed and loaded following the order: <code> subdim -> dim -> fact </code>. The fact is the mark of all students.
+The data is tranformed and loaded following the order: **<code> subdim -> dim -> fact </code>**. The fact is the mark of all students.
 
 <img title="adf" alt="Alt text" src="/images/Data Flow ETL from Staging to dim_sinhvien.png">
 <p>
