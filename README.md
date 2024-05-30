@@ -11,7 +11,7 @@ In this project, it requires modeling following snowflake schema. When you slice
 <img title="a title" alt="Alt text" src="/images/Data Processing.png">
 
 
-**2. What I will do in this project?**
+**2. WHAT I WILL DO IN THIS PROJECT?**
 
 My system follows 3-layers architecture, which includes 3 data layers: **Staging**, **Data Warehouse**, **Data Mart**. Data from raw datastore is extracted, loaded and tranforms through layers. In each layer, data is stored in differenct types with different schemas.
 
