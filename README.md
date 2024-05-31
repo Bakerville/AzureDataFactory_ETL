@@ -79,7 +79,7 @@ There are 2 mode to see data: Letter mode and Number mode made of a DAX measure
         <em style="text-align: center;">Mark Dashboard in Number Mode</em>
 </p>
 
-**3. What I have learned?**
+**3. WHAT I HAVE LEARNED?**
 
 When the data produced in business processes grows promptly day by day, Data Warehouse Architecture is essential to reduce the size of storage. Appently, The data warehouse that operatios data in many dimensions and facts provides fast query.
 
