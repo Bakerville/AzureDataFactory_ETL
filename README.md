@@ -68,7 +68,7 @@ Last step of entire processing, Data from Azure SQLserver is loaded to Power BI.
 <img title="adf" alt="Alt text" src="/images/Slicers.png">
 
 
-There are 2 mode to see data: Letter mode and Number mode made of a DAX measure
+There are 2 modes to see data: **Letter mode** and **Number mode** made of a DAX measure
 
 <img title="adf" alt="Alt text" src="/images/Letter Mark.png">
 <p>
