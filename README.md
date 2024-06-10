@@ -7,7 +7,7 @@ This is my personal project for learning data warehouse architecture and Azure C
 
 There is a data of student in a college (so, i set up private for this repository). I need to load these data into a server for long-term storing and support analysis automaticly.
 
-In this project, it requires modeling following snowflake schema. When you slice data along SchoolYear dimension, Faculty dimension, the dashboard will show you the infomation and marks of a student.
+In this project, it requires modeling following snowflake schema. When you slice data along SchoolYear dimension, Faculty dimension, the dashboard will show you the infomation and marks of a student. You can see the schemas of files in sample folder.
 
 <img title="a title" alt="Alt text" src="/images/Data Processing.png">
 
